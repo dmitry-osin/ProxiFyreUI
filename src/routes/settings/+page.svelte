@@ -1,8 +1,12 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog';
+  import { getVersion } from '@tauri-apps/api/app';
   import { api } from '$lib/api';
   import { appSettings, config, notify, LOG_LEVELS } from '$lib/stores';
   import type { AppSettings, ProxiFyreConfig } from '$lib/types';
+
+  let appVersion = $state('...');
+  getVersion().then(v => appVersion = v).catch(() => appVersion = '?');
 
   let localSettings = $state<AppSettings>({ proxifyrePath: '', configPath: '', startWithWindows: false, startMinimized: false });
   let logLevel      = $state('Error');
@@ -240,7 +244,7 @@
           <div class="setting-label">ProxiFyre UI</div>
           <div class="setting-desc">Configuration manager and service controller for ProxiFyre</div>
         </div>
-        <span class="badge badge-accent">v0.1.0</span>
+        <span class="badge badge-accent">v{appVersion}</span>
       </div>
       <div class="setting-row">
         <div>

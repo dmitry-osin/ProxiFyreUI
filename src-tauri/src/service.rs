@@ -14,6 +14,7 @@ pub struct ServiceStatus {
 pub fn get_service_status() -> ServiceStatus {
     match Command::new("sc")
         .args(["query", "ProxiFyreService"])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
     {
         Ok(out) => parse_sc_output(&String::from_utf8_lossy(&out.stdout)),
