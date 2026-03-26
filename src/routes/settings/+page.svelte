@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { open } from '@tauri-apps/plugin-dialog';
+  import { open, save } from '@tauri-apps/plugin-dialog';
   import { getVersion } from '@tauri-apps/api/app';
   import { api } from '$lib/api';
   import { appSettings, config, notify, LOG_LEVELS } from '$lib/stores';
@@ -65,8 +65,13 @@
 
   async function createDefaultConfig() {
     if (!localSettings.configPath) {
-      notify('error', 'Set the config file path first');
-      return;
+      const chosen = await save({
+        title:   'Create ProxiFyre config file',
+        filters: [{ name: 'JSON Config', extensions: ['json'] }],
+        defaultPath: 'app-config.json',
+      });
+      if (!chosen) return;
+      localSettings = { ...localSettings, configPath: chosen as string };
     }
     const defaultCfg: ProxiFyreConfig = {
       logLevel:  'Error',
@@ -76,6 +81,9 @@
     };
     try {
       await api.saveProxifyrConfig(localSettings.configPath, defaultCfg);
+      // Persist the path so it's reflected in appSettings
+      await api.saveAppSettings(localSettings);
+      appSettings.set(localSettings);
       config.set(defaultCfg);
       logLevel  = defaultCfg.logLevel;
       bypassLan = defaultCfg.bypassLan;
@@ -185,7 +193,7 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           {savingSettings ? 'Saving…' : 'Save Paths'}
         </button>
-        {#if localSettings.configPath && !$config}
+        {#if !$config}
           <button class="btn btn-secondary" onclick={createDefaultConfig}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
             Create Default Config
